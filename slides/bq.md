@@ -1,6 +1,7 @@
 ## BigQuery & MapReduce
 
 Presented by David Chen @ GliaCloud
+![GliaCloud](https://www.gliacloud.com/static/icons/logo_light.png)
 
 
 ## What is BigQuery
@@ -15,7 +16,7 @@ Interactive data analysis tool for large datasets.
 3.  Fast and Affordable
 
 
-## Tools for Big Data
+## Tools designed for Big Data
 
 Based on Dremel, Columnar Storage & multi-level execution trees
 
@@ -99,18 +100,6 @@ link to google sheet template
 Install *OWOX BI BigQuery Reports* plugin
 
 
-## MapReduce
-There is two ways:
-BigQuery Connector, easy integration for Hadoop and Spark
-
-How about run mapreduce on BigQuery? (There is Tricks!)
-
-
-## What is mapreduce
-
-![enter image description here](http://blog.trifork.com//wp-content/uploads/2009/08/MapReduceWordCountOverview1.png)
-
-
 ## BigQuery UDF
 Write Javascript with BigQuery
 https://cloud.google.com/bigquery/user-defined-functions
@@ -143,6 +132,18 @@ https://cloud.google.com/bigquery/user-defined-functions
     WHERE title LIKE '%ç%'
     ORDER BY requests DESC
     LIMIT 100
+
+
+## MapReduce
+There is two ways:
+BigQuery Connector, easy integration for Hadoop and Spark
+
+How about run mapreduce on BigQuery? (There is Tricks!)
+
+
+## What is mapreduce
+
+![enter image description here](http://blog.trifork.com//wp-content/uploads/2009/08/MapReduceWordCountOverview1.png)
 
 
 ## Map
@@ -199,6 +200,22 @@ https://cloud.google.com/bigquery/user-defined-functions
       emit({keyword: row.keyword, total: total});
     }
 
+    bigquery.defineFunction(
+      'mapper',
+      ['comment'],
+      [{'name': 'keyword', 'type': 'string'},
+      {'name': 'count', 'type': 'int'}],
+      mapper
+    );
+
+    bigquery.defineFunction(
+      'reducer',
+      ['keyword', 'count'],
+      [{'name': 'keyword', 'type': 'string'},
+      {'name': 'total', 'type': 'int'}],
+      reducer
+    )
+
     select keyword, total
         from reducer(
             select keyword, nest(count) as count
@@ -206,8 +223,9 @@ https://cloud.google.com/bigquery/user-defined-functions
                     select Actor1Geo_FullName as comment
                         from [gdelt-bq:gdeltv2.events]
                 )
+                group by keyword
         )
-        group by keyword
+
 
 
 ## Challenge yourself
