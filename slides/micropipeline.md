@@ -28,7 +28,7 @@ Check our website: www.gliacloud.com for more details
 ### A very simple abstraction of data processing framework
 - Application Layer (such as MapReduce / Hive)
 - Pipeline Layer (describe later ...)
-- Task Execution Layer (Message Queue, Clustering)
+- Task Execution Layer (Message Queue)
 
 
 ## What is Pipeline?
@@ -55,7 +55,12 @@ wf = linear_flow.Flow("pass-from-to")
 wf.add(TaskA('a'), TaskB('b'))
 ```
 
-___It controlled that to run TaskB, the TaskA should be done first. And the output of TaskA will become TaskB's input later. TaskFlow also included `Linear`, `Unordered`, and `Graph` flow and the ability to combine them together and create a really complex flow controller___
+___TaskFlow has Task and Flow. Task defined the work. Flow controlled how to execute them. To run TaskB, the TaskA should be done first. And the output of TaskA will become TaskB's input later.___
+
+
+### TaskFlow
+
+___TaskFlow has differnt flow included `Linear`, `Unordered`, and `Graph`. Therefore, it has ability to create a really complex work flow.___
 
 
 ### Luigi
@@ -88,7 +93,7 @@ class Bar(luigi.Task):
                 current_nodes += 1
                 yield Bar(current_nodes)
 ```
-___Instead of a separate flow controller. It used a `require` method to define the dependency. While Foo runs, all Bar defined in requires will be check, Any not finish Bar Task will be trigger to run.___
+___Instead of a separate flow controller. It used a `require` method to define the dependency. While Foo runs, all Bar defined in requires will be check, and it will trigger the Bar Task if it is not yet runned.___
 
 
 ### Luigi
@@ -146,9 +151,9 @@ ___Just like Spark except it use the bash-like way to chain tasks___
 
 
 ## What is pipeline
-- Task execution (async, clustering)
+- Time consuming task execution (async, on clusters)
 - Flow control  (order, dependency, branch)
-- Workflow reuse (don't repeat)
+- Easy workflow reuse (don't repeat)
 
 
 
@@ -175,7 +180,7 @@ ___I am lazy so I name after django-q___
 ___Sounds good?___
 
 
-### Why Google Pipeline API
+### I Pipeline API
 > ...enabling developers to express data dependencies while achieving parallelism.
 
 ```
@@ -188,16 +193,20 @@ class AddTwo(Pipe):
         v = yield AddOne(number)
         yield AddOne(v)
 ```
-___Easy to see the dependency, no extra flow controller, and require method___
+___Easy to see the dependency, no extra flow controller, and no extra `require` method___
 
 
 ### Why django?
-Because GliaCloud love django!!
+Because GliaCloud love django!! 
 
-django-P use django nice ORM to store the task and the dependency between tasks.
+All majoy system is based on django.
+
+django-P uses django nice ORM to store the task and the dependency between tasks.
 
 
 ## Design
+simply 5 models
+
 * Pipeline
 * Slot
 * Barrier
@@ -223,17 +232,21 @@ class Pipe(object):
         self.save()
         async(evaluate, self.pk)
 ```
-___An abstraction class for Pipeline, define the time-consuming task by overrideing the `run` method, the class_path identify later, where the engine should find the task___
+___An abstract class for Pipeline, define the time-consuming task by overrideing the `run` method, the class_path identify, where the engine should find the task later___
 
 
-### Pipe
+### Use Pipe
 ```
 class HeavyWork(Pipe):
     def run(self, urls):
         # some heavy task
         pass
+
+heavy_work = HeavyWork(['http:...'])
+print heavy_work.class_path  # tasks.HeavyWork
+heavy_work.start()
 ```
-___Just inherit it and override the run method. The Pipe is the only class user needs to know.___
+___Just need to inherit it and override the run method. The Pipe is the only class user needs to know.___
 
 
 ### Future
@@ -244,7 +257,7 @@ class Future(object):
         self._after_all_pipelines = {}
         self.output = pipe.output
 ```
-___Internal class, which hold the pipeline return results, it has two state. Waiting means the result is not ready yet, Done means the result is done finish, the `_after_all_pipelines` recorded all dependency. So the django-p knows how many pipelines need to be done before current one can fire to run.___
+___Internal class, which hold the pipeline return results, it has two state. State `waiting` means the pipeline is running and the result is not ready yet, State `done` means the pipeline is finished, the `_after_all_pipelines` recorded all dependency. So the django-p knows how many pipelines need to be done before current one can fire to run.___
 
 
 ### Pipeline
@@ -261,10 +274,10 @@ class Pipeline(models.Model):
 
     status = models.IntegerField(choices=STATUS, default=STATUS.WAITING)
 ```
-___Store pipeline config to db, the parameters store all arguments of the pipeline, it can store values or a reference to another pipeline's output (Slot)___
+___Store Pipe config to db, the `params` store all arguments of the pipeline, it can store values or a reference to another pipeline's output (Slot)___
 
 
-### Slot:
+### Slot
 ```
 class Slot(models.Model):
     filler = models.ForeignKey(Pipeline, null=True)
@@ -286,11 +299,11 @@ class Barrier(models.Model):
     triggered = models.DateTimeField(null=True, auto_now=True)
     status = models.IntegerField(choices=STATUS, default=STATUS.WAITING)
 ```
-___Each pipeline also has a barrier. Barrier is a special class used to prevent pipeline run before all dependencies are satisfied already.___
+___Each pipeline also has a barrier. Barrier is a special class used to prevent pipeline run before it's dependencies are satisfied already.___
 
 
 
-## Define a Pipe
+## Look into a Pipe
 
 ```
 class AddOne(Pipe):
@@ -301,32 +314,37 @@ class AddTwo(Pipe):
     def run(self, number): # 1. a generator
         # 2. yield a Pipe and get the result from control loop
         v = yield AddOne(number)                      --- Pipe A
-        # 3. padd the result to another pipe
+        # 3. pass the result to another pipe
         yield AddOne(v)                               --- Pipe B
 ```
 
 The simple code tells us a lot:
-1. It imply Pipe B is depend on Pipe A, so PipeA should run first
-2. It imply AddTwo return the same value as PipeB
-3. It imply Pipe B is a heavy task and Pipe A is a light task
+1. It implies Pipe A don't need to wait.
+1. It implies Pipe B is depend on Pipe A, so PipeA should run first
+3. It implies Pipe B is a heavy task and Pipe A is a light task
 
 
 ### Main control loop
 ```
+# generator
 pipeline_iter = pipeline.run(*args, **kwargs)
 
 while True:
     try:
+        # a new Pipe yield from Pipe.run
         yielded = pipeline_iter.send(next_value)
     except StopIteration:
-        breaking
+        break
     except Exception, e:
         raise
 
     assert isinstance(yielded, Pipe)
+    # convert Pipe to future
+    # send back to Pipe in next run
     next_value = Future(yielded)
     child_pipeline = yielded
 
+    # deterministic dependent slots
     dependent_slots = set()
     for arg in child_pipeline.args:
         if isinstance(arg, Slot):
@@ -342,13 +360,16 @@ while True:
         target_id=child_pipeline.pk,
     )
     barrier.blocking_slots.add(*dependent_slots)
+    # notfiy barrier
     notify_barrier(barrier)
 ```
 ___I promissed, it is the most complicate code in this talk___
 
 
 ### In Short
-___The control loop use python's yield feature to do all the magic behind, A pipeline may execute serveral child pipelines by `yield` them.  The control loop processed these pipeline one by one and transform them to future with dependency informations inside. The future send back to current pipeline with `.send` and the pipeline pass these future to other child pipelines.___
+___The control loop use python's yield feature to do all the magic behind, A pipeline may execute serveral child pipelines by `yield` them.  The control loop processed these pipeline one by one and transform them to `Future` with dependency informations inside. The `Future` later sent back to current pipeline with `.send()` and the pipeline pass these `Future` to other child pipelines depend on it.___
+
+___very easy, right?___
 
 
 ### Another Example
@@ -367,15 +388,15 @@ class MySearchEnginePipeline(pipeline.Pipeline):
     results = []
     for u in urls:
       results.append( (yield WordCountUrl(u)) )
-    yield Sum(*results) # Barrier waits
+    yield Sum(*results) # non blocking execution by barrier
 ```
-___task can easily spread over cluster___
+___Tasks run on different machine async. Complex tasks can easily spread over clusters___
 
 
 ### With django-P
-1. dependency resolution automatically.
-2. workflow management
-2. Execute tasks async on clusting (by django-q)
+1. Dependency resolution automatically.
+2. Workflow management
+2. Execute tasks async on clusters (by django-q)
 
 
 
@@ -394,6 +415,7 @@ class LogWaitLogInOrder(pipeline.Pipeline):
 
     yield LogMessage('This would happen immediately on run')
 ```
+___Force tasks run one after another___
 
 
 ## After
@@ -411,11 +433,12 @@ class LogWaitLogAfter(pipeline.Pipeline):
 
     yield LogMessage('This would happen immediately on run')
 ```
+___Force tasks run one after another___
 
 
 ## Future Work
-* idempotent Pipeline
-* Life Cycle Control
-* fully asynchronous and even call out to human operators to decide how the pipeline should proceed.
+* idempotent Pipeline (make pipeline more functional)
+* Life Cycle Control (finalize, retry)
+* Advance control, such as fully asynchronous and even call out to human operators to decide how the pipeline should proceed.
 
 ___please contribute!___
