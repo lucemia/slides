@@ -3,25 +3,67 @@
 Presented by David Chen @ GliaCloud
 ![GliaCloud](https://www.gliacloud.com/static/icons/logo_light.png)
 
+GDE
+
+
+## Use Case
+Ad Tech Company
+
+User behavior analysis based on million of logs
+
 
 ## What is BigQuery
 
-Interactive data analysis tool for large datasets.
+Interactive data analysis tool for large datasets designed by Google
+
+![](http://image.slidesharecdn.com/ic1ejbksmuxh9rnerx2q-signature-d1261ab99e3e3e10e8adde74fac71193dd38bcbb794483b2af11cab8d0e2057a-poli-150304233953-conversion-gate01/95/google-for-1600-kpi-fluentd-google-big-query-6-638.jpg?cb=1425857309)
 
 
 ## Why BigQuery
 
-1.  Tools for Big Data
+1.  Tools designed for Big Data
 2.  Easy to Use
 3.  Fast and Affordable
 
 
+
 ## Tools designed for Big Data
 
-Based on Dremel, Columnar Storage & multi-level execution trees
+Based on Dremel, Columnar Storage & multi-level execution trees. The query is processed by thousands of servers in a multi-level execution tree structure.
 
-The query is processed by thousands of servers in a multi-level execution tree structure.
-![](http://image.slidesharecdn.com/ic1ejbksmuxh9rnerx2q-signature-d1261ab99e3e3e10e8adde74fac71193dd38bcbb794483b2af11cab8d0e2057a-poli-150304233953-conversion-gate01/95/google-for-1600-kpi-fluentd-google-big-query-6-638.jpg?cb=1425857309)
+
+![](http://image.slidesharecdn.com/jordantiganibigquerybigdataspain2012conference-121128025249-phpapp02/95/crunching-data-with-google-bigquery-jordan-tigani-at-big-data-spain-2012-15-1024.jpg?cb=1368666852)
+
+
+## Simple Query
+
+```
+select
+    state, count(*) count_babies
+from [publicdata:samples.natality]
+where
+    year >= 1980 and year < 1990
+group by state
+order by count_babies DESC
+limit 10
+```
+
+
+## BigQuery
+
+![](http://image.slidesharecdn.com/jordantiganibigquerybigdataspain2012conference-121128025249-phpapp02/95/crunching-data-with-google-bigquery-jordan-tigani-at-big-data-spain-2012-17-1024.jpg?cb=1368666852)
+
+
+## Columnar Storage
+
+![](http://1.bp.blogspot.com/-QgaSLhmy098/UFS9t5Js6uI/AAAAAAAAAM4/fvenl98H6gE/s640/columnsvsrows.png)
+
+
+Query optimizier database:
+* uniform type, better compression rate
+* only access required data
+* reduce disk I/O
+
 
 
 ## Easy to Use
@@ -32,6 +74,7 @@ https://bigquery.cloud.google.com/welcome?pli=1
 
 
 ### use SQL
+It did supports `JOIN`
 
     SELECT Year, Actor1Name, Actor2Name, Count FROM (
     SELECT Actor1Name, Actor2Name, Year, COUNT(*) Count,
@@ -58,6 +101,7 @@ https://bigquery.cloud.google.com/welcome?pli=1
     ORDER BY Year
 
 
+
 ## Fast and Affordable
 
 
@@ -75,11 +119,11 @@ Ref: http://www.slideshare.net/DharmeshVaya/exploring-bigdata-with-google-bigque
 
 
 ### Affordable
-Storage
-$0.02 per GB / month
 
-Processing
-$5 per TB
+Type | Price
+-----|-----
+Storage |  $0.02 per GB / month
+Processing | $5 per TB (first 1TB free)
 
 
 ## Interesting Dataset
@@ -135,19 +179,24 @@ https://cloud.google.com/bigquery/user-defined-functions
     LIMIT 100
 
 
+
 ## MapReduce
 There is two ways:
-BigQuery Connector, easy integration for Hadoop and Spark
 
-How about run mapreduce on BigQuery? (There is Tricks!)
+1. BigQuery Connector (Hadoop and Spark)
+2. MapReduce on BigQuery vis UDF (trick)
 
 
-## Mapreduce Architecture
+## Review Mapreduce
 
 ![enter image description here](http://blog.trifork.com//wp-content/uploads/2009/08/MapReduceWordCountOverview1.png)
 
 
-## Dremel vs MapReduce
+## MapReduce
+![](http://image.slidesharecdn.com/jordantiganibigquerybigdataspain2012conference-121128025249-phpapp02/95/crunching-data-with-google-bigquery-jordan-tigani-at-big-data-spain-2012-13-1024.jpg?cb=1368666852)
+
+
+## Dremel (BigQuery) vs MapReduce
 
 * MapReduce
   * Flexible batch processing
@@ -156,34 +205,6 @@ How about run mapreduce on BigQuery? (There is Tricks!)
 * Dremel
   * Optimized for interactive SQL queries
   * Very Low Latency
-
-
-## BigQuery Architecture
-
-![](http://image.slidesharecdn.com/jordantiganibigquerybigdataspain2012conference-121128025249-phpapp02/95/crunching-data-with-google-bigquery-jordan-tigani-at-big-data-spain-2012-15-1024.jpg?cb=1368666852)
-
-
-## Simple Query
-
-```
-select
-    state, count(*) count_babies
-from [publicdata:samples.natality]
-where
-    year >= 1980 and year < 1990
-group by state
-order by count_babies DESC
-limit 10
-```
-
-
-## BigQuery
-
-![](http://image.slidesharecdn.com/jordantiganibigquerybigdataspain2012conference-121128025249-phpapp02/95/crunching-data-with-google-bigquery-jordan-tigani-at-big-data-spain-2012-17-1024.jpg?cb=1368666852)
-
-
-## MapReduce
-![](http://image.slidesharecdn.com/jordantiganibigquerybigdataspain2012conference-121128025249-phpapp02/95/crunching-data-with-google-bigquery-jordan-tigani-at-big-data-spain-2012-13-1024.jpg?cb=1368666852)
 
 
 ## Map
@@ -265,6 +286,10 @@ limit 10
                 )
                 group by keyword
         )
+
+
+
+## Great for education
 
 
 ## Reference
