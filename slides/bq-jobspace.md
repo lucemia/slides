@@ -19,6 +19,47 @@ Interactive data analysis tool for large datasets designed by Google
 ![](http://image.slidesharecdn.com/ic1ejbksmuxh9rnerx2q-signature-d1261ab99e3e3e10e8adde74fac71193dd38bcbb794483b2af11cab8d0e2057a-poli-150304233953-conversion-gate01/95/google-for-1600-kpi-fluentd-google-big-query-6-638.jpg?cb=1425857309)
 
 
+
+## Some Application and dataset
+https://www.reddit.com/r/bigquery/wiki/datasets
+
+
+## GDelt Project: A Global Database of Society
+http://gdeltproject.org/
+http://gdeltproject.org/globaldashboard/
+
+Data:
+* 340GB
+
+
+> Supported by Google Jigsaw, the GDELT Project monitors the world's broadcast, print, and web news from nearly every corner of every country in over 100 languages and identifies the people, locations, organizations, counts, themes, sources, emotions, counts, quotes, images and events driving our global society every second of every day, creating a free open platform for computing on the entire world.
+
+
+## NYC Taxi
+2013 NYC Taxi rides
+* 173 million rows
+* 130GB
+
+Demo:
+* http://nyctaxi.herokuapp.com/
+* http://taxi.imagework.com/
+
+
+## Cancer Genomics
+* 400GB
+
+Demo:
+* http://nbviewer.jupyter.org/github/isb-cgc/examples-Python/blob/master/notebooks/The%20ISB-CGC%20open-access%20TCGA%20tables%20in%20BigQuery.ipynb
+
+
+## Soccor
+
+Demo:
+http://nbviewer.jupyter.org/github/GoogleCloudPlatform/ipython-soccer-predictions/blob/master/predict/wc-final.ipynb
+
+
+
+
 ## Why BigQuery
 
 1.  Tools designed for Big Data
@@ -36,6 +77,8 @@ Based on Dremel, Columnar Storage & multi-level execution trees. The query is pr
 
 
 ## Simple Query
+
+https://cloud.google.com/bigquery/sample-tables
 
 ```
 select
@@ -67,6 +110,9 @@ Query optimizier database:
 
 
 ## Easy to Use
+
+
+### easy to share
 
 
 ### no deployment and (almost) no cost while you don't need it
@@ -101,6 +147,12 @@ It did supports `JOIN`
     ORDER BY Year
 
 
+### more than SQL
+
+* JSON format
+* schema (nested data)
+
+
 
 ## Fast and Affordable
 
@@ -122,7 +174,7 @@ Ref: http://www.slideshare.net/DharmeshVaya/exploring-bigdata-with-google-bigque
 
 Type | Price
 -----|-----
-Storage |  $0.02 per GB / month
+Storage |  $0.02 per GB / month (free after 90days)
 Processing | $5 per TB (first 1TB free)
 
 
@@ -142,6 +194,7 @@ more: https://www.reddit.com/r/bigquery/wiki/datasets
 ## Demo: Use BigQuery, with Google Sheet
 link to google sheet template
 
+https://docs.google.com/spreadsheets/d/1RDG_Sdza9uAxsIe1SeXhYeWhmoQYh3hpD5pNwaalKes/edit#gid=760729610
 Install *OWOX BI BigQuery Reports* plugin
 
 
